@@ -30,6 +30,7 @@
 - **离线演示**：没有 API Key 也能完整运行，不向外部服务发送数据。
 - **大模型模式**：支持 OpenAI 兼容接口，默认适配 DeepSeek。
 - **大请求保护**：模型请求按条数与字符数分批；遇到 HTTP 413 时自动拆分重试。
+- **公开演示锁定**：设置 `PUBLIC_DEMO_ONLY=true` 后只使用本地规则，不读取或调用任何模型 API。
 
 ## 在线演示预览
 
@@ -130,6 +131,14 @@ DEEPSEEK_API_KEY = "your-key"
 DEEPSEEK_BASE_URL = "https://api.deepseek.com"
 DEEPSEEK_MODEL = "deepseek-chat"
 ```
+
+公网演示如果不希望接触 API，请额外设置：
+
+```toml
+PUBLIC_DEMO_ONLY = "true"
+```
+
+该开关会隐藏模型分析选项并强制使用本地规则；即使环境中存在密钥，也不会读取或发送。
 
 Streamlit Cloud 的文件系统是临时的，免费部署中的 SQLite 历史记录可能随实例重启丢失。本项目将其作为演示功能，不作为生产数据库。
 

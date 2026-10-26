@@ -89,7 +89,14 @@ def get_store():
 
 
 store = get_store()
-api_key = get_config("DEEPSEEK_API_KEY")
+public_demo_only = get_config("PUBLIC_DEMO_ONLY").strip().lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
+configured_api_key = get_config("DEEPSEEK_API_KEY")
+api_key = "" if public_demo_only else configured_api_key
 model = get_config("DEEPSEEK_MODEL", "deepseek-chat")
 base_url = get_config("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
 
@@ -105,22 +112,35 @@ st.markdown(
 
 with st.sidebar:
     st.subheader("运行设置")
-    mode_labels = {
-        "自动选择": "auto",
-        "DeepSeek 语义分析": "llm",
-        "本地规则（离线）": "rules",
-    }
-    mode_label = st.radio(
-        "分析模式",
-        list(mode_labels),
-        help="自动选择会在有 Key 时使用 DeepSeek；失败时自动回退到本地规则。",
-    )
+    if public_demo_only:
+        mode_labels = {"本地规则（离线）": "rules"}
+        mode_label = st.radio(
+            "分析模式",
+            list(mode_labels),
+            help="公开演示已锁定为本地规则模式，不读取或调用任何模型 API。",
+        )
+    else:
+        mode_labels = {
+            "自动选择": "auto",
+            "DeepSeek 语义分析": "llm",
+            "本地规则（离线）": "rules",
+        }
+        mode_label = st.radio(
+            "分析模式",
+            list(mode_labels),
+            help="自动选择会在有 Key 时使用 DeepSeek；失败时自动回退到本地规则。",
+        )
     mode = mode_labels[mode_label]
-    if api_key:
+    if public_demo_only:
+        st.success("公开演示模式 · 不读取或调用任何模型 API")
+    elif api_key:
         st.success(f"DeepSeek 已配置 · {model}")
     else:
         st.info("未配置 API Key，当前使用离线演示模式。")
-    st.caption("反馈数据仅在当前运行中处理；API 模式会将文本发送给模型服务。")
+    if public_demo_only:
+        st.caption("反馈数据仅在当前本地规则流程中处理，不发送给外部模型服务。")
+    else:
+        st.caption("反馈数据仅在当前运行中处理；API 模式会将文本发送给模型服务。")
     st.divider()
     st.markdown("**项目边界**")
     st.caption("辅助发现问题和排序，不自动做产品决策，也不替代用户访谈。")
