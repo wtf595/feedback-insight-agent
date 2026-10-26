@@ -1,11 +1,13 @@
 # 反馈洞察 Agent
 
-> 公开演示（无需登录）：<https://html.cafe/x6823cfe2>
+> 正式公网版（无需登录）：<https://wtf595.github.io/feedback-insight-agent/>
 >
-> 备用地址（主站访问受限时）：<https://wtf595.github.io/feedback-insight-agent/>
+> 备用镜像（主站访问受限时）：<https://html.cafe/x6823cfe2>
 >
 > 该版本完全在浏览器内运行，访客无需登录，不读取或调用任何模型 API。
 > 报告和审核记录保存在当前浏览器的 `localStorage` 中，清理浏览器数据后会丢失。
+>
+> GitHub Pages 由 [`pages.yml`](.github/workflows/pages.yml) 自动发布。
 
 把零散的用户评论、客服工单和问卷反馈，转化为**有证据、有优先级、可复核的产品行动建议**。
 
