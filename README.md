@@ -1,6 +1,8 @@
 # 反馈洞察 Agent
 
-> 公开演示：<https://wtf595.github.io/feedback-insight-agent/>
+> 公开演示（无需登录）：<https://cdn.jsdelivr.net/gh/wtf595/feedback-insight-agent@main/dist/feedback-insight-agent.html>
+>
+> 备用地址：<https://html.cafe/x6823cfe2>
 >
 > 该版本完全在浏览器内运行，访客无需登录，不读取或调用任何模型 API。
 
