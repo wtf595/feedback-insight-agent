@@ -1,0 +1,18 @@
+[project]
+name = "feedback-insight-agent"
+version = "0.1.0"
+description = "用户反馈洞察 Agent：把分散反馈转化为可审核、可执行的产品洞察"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+  "streamlit>=1.50,<2",
+  "pandas>=2.0,<3",
+  "pydantic>=2.7,<3",
+  "openai>=1.40,<3",
+  "python-dotenv>=1.0,<2",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
