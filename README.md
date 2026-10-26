@@ -29,6 +29,7 @@
 - **报告导出**：支持 Markdown 和结构化 JSON。
 - **离线演示**：没有 API Key 也能完整运行，不向外部服务发送数据。
 - **大模型模式**：支持 OpenAI 兼容接口，默认适配 DeepSeek。
+- **大请求保护**：模型请求按条数与字符数分批；遇到 HTTP 413 时自动拆分重试。
 
 ## 在线演示预览
 
@@ -116,7 +117,7 @@ python3 scripts/run_eval.py data/release_test_feedback.csv
 python3 -m unittest discover -s tests -v
 ```
 
-当前包含 9 个单元测试，覆盖清洗脱敏、CSV 导入、主题分类、自动兜底、SQLite 保存、人工审核和报告导出。
+当前包含 13 个单元测试，覆盖清洗脱敏、CSV 导入、主题分类、自动兜底、请求分批与 413 自动拆分、SQLite 保存、人工审核和报告导出。
 
 ## 部署到 Streamlit Community Cloud
 

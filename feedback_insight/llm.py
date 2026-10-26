@@ -10,6 +10,10 @@ class LLMAnalysisError(RuntimeError):
     """Raised when the model response cannot be validated."""
 
 
+MAX_RECORDS_PER_REQUEST = 30
+MAX_CHARS_PER_REQUEST = 12_000
+
+
 SYSTEM_PROMPT = """你是资深用户研究分析师。你的任务是对用户反馈逐条分类，为产品团队提供可追溯的洞察。
 
 只能使用以下主题：
@@ -90,22 +94,54 @@ def _validate_response(
     return labels
 
 
-def analyze_with_llm(
+def _record_payload_size(record: FeedbackRecord) -> int:
+    """Approximate the prompt bytes contributed by one feedback record."""
+    return len(record.id) + len(record.text[:800]) + len(record.source) + 64
+
+
+def _batch_records(records: List[FeedbackRecord]) -> List[List[FeedbackRecord]]:
+    """Keep each model request below conservative record and character limits."""
+    batches: List[List[FeedbackRecord]] = []
+    batch: List[FeedbackRecord] = []
+    batch_size = 0
+
+    for record in records:
+        record_size = _record_payload_size(record)
+        exceeds_limits = (
+            len(batch) >= MAX_RECORDS_PER_REQUEST
+            or (batch and batch_size + record_size > MAX_CHARS_PER_REQUEST)
+        )
+        if exceeds_limits:
+            batches.append(batch)
+            batch = []
+            batch_size = 0
+        batch.append(record)
+        batch_size += record_size
+
+    if batch:
+        batches.append(batch)
+    return batches
+
+
+def _is_payload_too_large(exc: Exception) -> bool:
+    response = getattr(exc, "response", None)
+    status_code = getattr(exc, "status_code", None)
+    if status_code is None and response is not None:
+        status_code = getattr(response, "status_code", None)
+    message = str(exc).lower()
+    return (
+        status_code == 413
+        or "payload too large" in message
+        or "request entity too large" in message
+        or "http 413" in message
+    )
+
+
+def _request_batch(
+    client,
     records: List[FeedbackRecord],
-    api_key: str,
-    base_url: str = "https://api.deepseek.com",
-    model: str = "deepseek-chat",
-    timeout: float = 45.0,
+    model: str,
 ) -> tuple[Dict[str, Dict[str, object]], Optional[str]]:
-    if not api_key:
-        raise LLMAnalysisError("未配置 API Key")
-
-    try:
-        from openai import OpenAI
-    except ImportError as exc:
-        raise LLMAnalysisError("缺少 openai 依赖") from exc
-
-    client = OpenAI(api_key=api_key, base_url=base_url, timeout=timeout)
     compact_records = [
         {
             "id": record.id,
@@ -146,4 +182,59 @@ def analyze_with_llm(
             last_error = exc
 
     raise LLMAnalysisError(f"模型输出重试后仍无效：{last_error}")
+
+
+def _analyze_batch_resiliently(
+    client,
+    records: List[FeedbackRecord],
+    model: str,
+) -> tuple[Dict[str, Dict[str, object]], Optional[str]]:
+    try:
+        return _request_batch(client, records, model)
+    except Exception as exc:
+        if not _is_payload_too_large(exc):
+            raise
+        if len(records) <= 1:
+            raise LLMAnalysisError(
+                "单条反馈仍超过模型网关的请求体限制，请缩短反馈正文后重试。"
+            ) from exc
+
+    midpoint = len(records) // 2
+    left_labels, _ = _analyze_batch_resiliently(client, records[:midpoint], model)
+    right_labels, _ = _analyze_batch_resiliently(client, records[midpoint:], model)
+    left_labels.update(right_labels)
+    return left_labels, None
+
+
+def analyze_with_llm(
+    records: List[FeedbackRecord],
+    api_key: str,
+    base_url: str = "https://api.deepseek.com",
+    model: str = "deepseek-chat",
+    timeout: float = 45.0,
+) -> tuple[Dict[str, Dict[str, object]], Optional[str]]:
+    if not api_key:
+        raise LLMAnalysisError("未配置 API Key")
+
+    try:
+        from openai import OpenAI
+    except ImportError as exc:
+        raise LLMAnalysisError("缺少 openai 依赖") from exc
+
+    client = OpenAI(api_key=api_key, base_url=base_url, timeout=timeout)
+    batches = _batch_records(records)
+    labels: Dict[str, Dict[str, object]] = {}
+    summaries: List[str] = []
+
+    for batch in batches:
+        batch_labels, summary = _analyze_batch_resiliently(client, batch, model)
+        labels.update(batch_labels)
+        if summary:
+            summaries.append(summary)
+
+    # Batch summaries only describe their own slice, so avoid presenting one as the
+    # conclusion for the whole dataset. The caller builds a data-backed summary
+    # after labels from every batch have been aggregated.
+    summary = summaries[0] if len(batches) == 1 and summaries else None
+    return labels, summary
 
