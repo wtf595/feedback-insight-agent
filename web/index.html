@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="把零散评论和客服反馈，转化为有证据、有优先级、可审核的产品行动建议。"
+    />
+    <meta name="color-scheme" content="light" />
+    <title>反馈洞察 Agent</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="hero-shell">
+      <div class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">FEEDBACK INSIGHT AGENT</p>
+          <h1>把用户原话，变成可执行的产品线索</h1>
+          <p class="hero-lead">
+            将零散评论和客服反馈整理为主题、优先级与证据，并保留人工审核和导出。
+          </p>
+        </div>
+        <div class="privacy-badge">
+          <span class="privacy-dot"></span>
+          <div>
+            <strong>公开离线演示</strong>
+            <span>数据只在此浏览器处理，不调用任何 API</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <nav class="tabs" aria-label="工作流" role="tablist">
+        <button
+          class="tab is-active"
+          id="tab-input"
+          type="button"
+          role="tab"
+          data-tab="input"
+          aria-controls="panel-input"
+          aria-selected="true"
+        >
+          <span>01</span> 导入反馈
+        </button>
+        <button
+          class="tab"
+          id="tab-insights"
+          type="button"
+          role="tab"
+          data-tab="insights"
+          aria-controls="panel-insights"
+          aria-selected="false"
+        >
+          <span>02</span> 洞察报告
+        </button>
+        <button
+          class="tab"
+          id="tab-review"
+          type="button"
+          role="tab"
+          data-tab="review"
+          aria-controls="panel-review"
+          aria-selected="false"
+        >
+          <span>03</span> 人工审核
+        </button>
+        <button
+          class="tab"
+          id="tab-history"
+          type="button"
+          role="tab"
+          data-tab="history"
+          aria-controls="panel-history"
+          aria-selected="false"
+        >
+          <span>04</span> 历史记录
+        </button>
+      </nav>
+
+      <section
+        class="panel is-active"
+        id="panel-input"
+        role="tabpanel"
+        aria-labelledby="tab-input"
+        aria-hidden="false"
+        data-panel="input"
+      >
+        <div class="input-layout">
+          <div class="card input-card">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">INPUT</p>
+                <h2>输入用户反馈</h2>
+              </div>
+              <span class="status-chip is-ready">本地规则已就绪</span>
+            </div>
+
+            <div class="source-switch" role="radiogroup" aria-label="数据来源">
+              <button class="source-option is-active" type="button" data-source="demo">
+                使用演示数据
+              </button>
+              <button class="source-option" type="button" data-source="csv">
+                上传 CSV
+              </button>
+              <button class="source-option" type="button" data-source="text">
+                粘贴文本
+              </button>
+            </div>
+
+            <div class="source-panel is-active" data-source-panel="demo">
+              <div class="demo-callout">
+                <div>
+                  <strong>拾光笔记 · 产品反馈演示</strong>
+                  <p>36 条虚构反馈，覆盖故障、体验、功能、价格、内容、客服和隐私主题。</p>
+                </div>
+                <span>无真实个人信息</span>
+              </div>
+            </div>
+
+            <div class="source-panel" data-source-panel="csv">
+              <label class="drop-zone" for="csv-file">
+                <input id="csv-file" type="file" accept=".csv,text/csv" />
+                <span class="upload-icon" aria-hidden="true">↑</span>
+                <strong>选择 CSV 文件</strong>
+                <span>至少包含 text 或“反馈内容”列，支持 UTF-8 / GB18030</span>
+              </label>
+              <label class="field">
+                <span>数据集名称</span>
+                <input id="csv-name" type="text" value="我的用户反馈" maxlength="50" />
+              </label>
+              <p class="file-status" id="csv-status" role="status"></p>
+            </div>
+
+            <div class="source-panel" data-source-panel="text">
+              <label class="field">
+                <span>每行一条反馈</span>
+                <textarea
+                  id="text-input"
+                  rows="8"
+                  placeholder="同步一直失败，换了网络也没用…&#10;希望增加批量导出功能。&#10;客服回复太慢了。"
+                ></textarea>
+              </label>
+              <label class="field">
+                <span>数据集名称</span>
+                <input id="text-name" type="text" value="手动粘贴反馈" maxlength="50" />
+              </label>
+            </div>
+
+            <div class="preview-heading">
+              <strong>数据预览</strong>
+              <span id="record-count">36 条可分析反馈</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>反馈内容</th>
+                    <th>来源</th>
+                    <th>评分</th>
+                  </tr>
+                </thead>
+                <tbody id="preview-body"></tbody>
+              </table>
+            </div>
+            <p class="limit-note" id="preview-note">预览仅展示前 8 条。</p>
+
+            <button class="primary-button" id="analyze-button" type="button">
+              生成洞察报告
+              <span aria-hidden="true">→</span>
+            </button>
+          </div>
+
+          <aside class="workflow-column">
+            <div class="card workflow-card">
+              <p class="eyebrow">WORKFLOW</p>
+              <h2>可解释的分析流程</h2>
+              <ol class="workflow-list">
+                <li><span>1</span><div><strong>清洗与去重</strong><p>隐藏手机号、邮箱和证件号。</p></div></li>
+                <li><span>2</span><div><strong>主题识别</strong><p>划分为 7 类业务主题，未知内容归入“其他”。</p></div></li>
+                <li><span>3</span><div><strong>情绪与严重度</strong><p>结合关键词和用户评分判断风险。</p></div></li>
+                <li><span>4</span><div><strong>优先级计算</strong><p>综合频次、负面比例、严重度和低评分。</p></div></li>
+                <li><span>5</span><div><strong>质量门禁</strong><p>高风险或低置信度结果进入人工审核。</p></div></li>
+                <li><span>6</span><div><strong>留痕导出</strong><p>保留证据原话、审核状态与版本编号。</p></div></li>
+              </ol>
+            </div>
+            <div class="card principle-card">
+              <p class="eyebrow">WHY THIS MATTERS</p>
+              <blockquote>
+                “正面 / 负面”只能告诉你有情绪，不能告诉你先修什么。
+              </blockquote>
+              <p>
+                这个演示把原话证据、业务主题和可审核的优先级放在同一张报告里，避免脱离语境的“AI 总结”。
+              </p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section
+        class="panel"
+        id="panel-insights"
+        role="tabpanel"
+        aria-labelledby="tab-insights"
+        aria-hidden="true"
+        data-panel="insights"
+      >
+        <div id="insights-empty" class="card empty-state">
+          <div class="empty-mark">02</div>
+          <h2>还没有生成报告</h2>
+          <p>先在“导入反馈”中运行一次离线分析。</p>
+          <button class="secondary-button" type="button" data-go-tab="input">去导入反馈</button>
+        </div>
+        <div id="insights-content" class="is-hidden">
+          <div class="section-heading report-heading">
+            <div>
+              <p class="eyebrow">INSIGHT REPORT</p>
+              <h2 id="report-title">拾光笔记 · 产品反馈演示</h2>
+              <p class="report-meta" id="report-meta"></p>
+            </div>
+            <div class="export-actions">
+              <button class="secondary-button" id="download-md" type="button">下载 Markdown</button>
+              <button class="secondary-button" id="download-json" type="button">下载 JSON</button>
+            </div>
+          </div>
+
+          <div class="metrics" id="metrics"></div>
+
+          <div class="report-grid">
+            <div class="card summary-card">
+              <p class="eyebrow">EXECUTIVE SUMMARY</p>
+              <p class="executive-summary" id="executive-summary"></p>
+              <div class="engine-note" id="engine-note"></div>
+            </div>
+            <div class="card quality-card">
+              <div class="section-heading compact">
+                <h3>数据质量检查</h3>
+                <span class="status-chip" id="review-required-chip"></span>
+              </div>
+              <div id="quality-stats"></div>
+              <div class="warnings" id="quality-warnings"></div>
+            </div>
+          </div>
+
+          <div class="card chart-card">
+            <div class="section-heading compact">
+              <div>
+                <p class="eyebrow">PRIORITY</p>
+                <h3>问题优先级</h3>
+              </div>
+              <span class="chart-legend">0—100 分</span>
+            </div>
+            <div class="bar-chart" id="bar-chart"></div>
+          </div>
+
+          <div class="section-heading insight-list-heading">
+            <div>
+              <p class="eyebrow">EVIDENCE</p>
+              <h2>按优先级查看洞察</h2>
+            </div>
+            <span>每条结论都能回到原话</span>
+          </div>
+          <div class="insight-list" id="insight-list"></div>
+        </div>
+      </section>
+
+      <section
+        class="panel"
+        id="panel-review"
+        role="tabpanel"
+        aria-labelledby="tab-review"
+        aria-hidden="true"
+        data-panel="review"
+      >
+        <div id="review-empty" class="card empty-state">
+          <div class="empty-mark">03</div>
+          <h2>暂无可审核报告</h2>
+          <p>完成一次分析后，可在这里确认证据并记录审核结论。</p>
+          <button class="secondary-button" type="button" data-go-tab="input">去导入反馈</button>
+        </div>
+        <div id="review-content" class="is-hidden">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">HUMAN IN THE LOOP</p>
+              <h2>人工审核</h2>
+              <p class="report-meta">
+                规则负责归纳和排序；人负责确认证据是否充分、行动是否合理。
+              </p>
+            </div>
+            <span class="report-id" id="review-run-id"></span>
+          </div>
+          <div class="review-layout">
+            <div class="card">
+              <h3>审核原因</h3>
+              <div id="review-reasons" class="warnings"></div>
+              <fieldset class="review-status">
+                <legend>审核结论</legend>
+                <label><input type="radio" name="review-status" value="pending" /> 待审核</label>
+                <label><input type="radio" name="review-status" value="approved" /> 审核通过</label>
+                <label><input type="radio" name="review-status" value="needs_revision" /> 需要修订</label>
+              </fieldset>
+              <label class="field">
+                <span>审核备注</span>
+                <textarea
+                  id="review-note"
+                  rows="6"
+                  placeholder="例如：故障主题证据充分；功能需求样本不足，暂不立项。"
+                ></textarea>
+              </label>
+              <button class="primary-button" id="save-review" type="button">保存审核结果</button>
+              <p class="save-status" id="review-save-status" role="status"></p>
+            </div>
+            <aside class="card review-checklist">
+              <h3>发布前检查</h3>
+              <label><input type="checkbox" /> 已抽查最高优先级主题的原话证据</label>
+              <label><input type="checkbox" /> 已确认数据样本和覆盖范围</label>
+              <label><input type="checkbox" /> 未把辅助结论表述为确定事实</label>
+              <label><input type="checkbox" /> 已标记需要进一步访谈的问题</label>
+              <div class="boundary-note">
+                这份报告用于辅助发现问题，不替代用户访谈或业务决策。
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="panel"
+        id="panel-history"
+        role="tabpanel"
+        aria-labelledby="tab-history"
+        aria-hidden="true"
+        data-panel="history"
+      >
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">AUDIT TRAIL</p>
+            <h2>历史记录</h2>
+            <p class="report-meta">报告保存在当前浏览器的本地存储中，清理浏览器数据后会移除。</p>
+          </div>
+          <button class="secondary-button danger-button" id="clear-history" type="button">
+            清空历史
+          </button>
+        </div>
+        <div id="history-empty" class="card empty-state">
+          <div class="empty-mark">04</div>
+          <h2>还没有历史记录</h2>
+          <p>完成一次分析后，报告会自动保存在当前浏览器。</p>
+        </div>
+        <div id="history-table-wrap" class="card table-card is-hidden">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>运行编号</th>
+                  <th>数据集</th>
+                  <th>时间</th>
+                  <th>反馈数</th>
+                  <th>状态</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="history-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>Feedback Insight Agent</span>
+      <span>可复现规则 · 证据追踪 · 人工审核</span>
+      <span>结果仅用于辅助判断</span>
+    </footer>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="./app.js"></script>
+  </body>
+</html>

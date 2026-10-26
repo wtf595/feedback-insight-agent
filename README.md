@@ -1,5 +1,9 @@
 # 反馈洞察 Agent
 
+> 公开演示：<https://wtf595.github.io/feedback-insight-agent/>
+>
+> 该版本完全在浏览器内运行，访客无需登录，不读取或调用任何模型 API。
+
 把零散的用户评论、客服工单和问卷反馈，转化为**有证据、有优先级、可复核的产品行动建议**。
 
 ![反馈洞察 Agent 工作台](assets/screenshot-home.png)
